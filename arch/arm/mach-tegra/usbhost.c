@@ -193,13 +193,13 @@ int usbhost_init(void)
 
 	// default values
 	usbhost_fixed_install_mode = 1;
-	usbhost_hotplug_on_boot = 1;
-	usbhost_fastcharge_in_host_mode = 0;
+	usbhost_hotplug_on_boot = 0;
+	usbhost_fastcharge_in_host_mode = 1;
     usbhost_charging_state = 0;
     usbhost_external_power = 0;
     usbhost_charge_slave_devices = 0;
     usbhost_lock_usbdisk = 0;
-    usbhost_firm_sleep = 0;
+    usbhost_firm_sleep = 1;
 
     printk("usbhost %s startup with FI=%d HP=%d FC=%d\n", __func__, usbhost_fixed_install_mode,
 	usbhost_hotplug_on_boot, usbhost_fastcharge_in_host_mode);
