@@ -481,25 +481,12 @@ snd_usb_audio_probe(struct usb_device *dev,
 	if (quirk && quirk->ifnum >= 0 && ifnum != quirk->ifnum)
 		goto __err_val;
 
-	// tmtmtm
-	// we may not want the USB DAC, connected at boot time, to become
-	// the primary sound card, rather for it to become available as
-	// an *overlay* primary sound card, so we postpone device probe
 	if(usbhost_hotplug_on_boot) {
+        // Defer probe in order to avoid becoming the primary sound card
 		struct timespec tp; ktime_get_ts(&tp);
-		if (tp.tv_sec<8 && postpone_usb_snd_dev==NULL) {
-			printk("##### sound/usb/card.c DON'T REGISTER EARLY tv_sec=%d ++++++++++++++++++++\n",tp.tv_sec);
-		    postpone_usb_snd_dev = dev;
-		    postpone_usb_snd_drv = current_drv;
-			printk("##### sound/usb/card.c delayed call to driver_attach prepared\n");
-			/*
-		    init_timer(&my_timer);
-		    my_timer.expires = jiffies + 18*HZ; // n*HZ = delay in number of seconds
-		    my_timer.function = delayed_func;
-		    add_timer(&my_timer);
-			printk("##### sound/usb/card.c delayed call to driver_attach initiated\n");
-			*/
-			goto __err_val;
+		if (tp.tv_sec < 8) {
+			printk("##### sound/usb/card.c -EPROBE_DEFER tv_sec=%d ++++++++++++++++++++\n",tp.tv_sec);
+            return -EPROBE_DEFER;
 		}
 		printk("##### sound/usb/card.c REGISTER tv_sec=%d ++++++++++++++++++++++++\n",tp.tv_sec);
 	} else {
@@ -645,7 +632,9 @@ static int usb_audio_probe(struct usb_interface *intf,
 {
 	struct snd_usb_audio *chip;
 	chip = snd_usb_audio_probe(interface_to_usbdev(intf), intf, id);
-	if (chip) {
+	if (chip == -EPROBE_DEFER)
+        return -EPROBE_DEFER;
+    else if (chip) {
 		usb_set_intfdata(intf, chip);
 		return 0;
 	} else
